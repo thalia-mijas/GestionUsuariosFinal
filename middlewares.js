@@ -39,7 +39,7 @@ const validateUser = async (req, res, next) => {
   });
 
   // Si existe usuario y el id es diferente al del usuario encontrado
-  if (user && user.id !== id) {
+  if (user && user.id.toString() !== id) {
     return res.status(409).json({ message: "El usuario ya está registrado" });
   }
   next();
@@ -79,7 +79,7 @@ const updateUser = async (req, res, next) => {
 
     return res.status(200).json({
       message: "Usuario actualizado con exito",
-      user: { id, name, email },
+      updated_user,
     });
   } catch (error) {
     console.error("Error: ", error);
@@ -95,7 +95,7 @@ const deleteUser = async (req, res, next) => {
 
     await user.destroy();
 
-    return res.status(200).json({ message: `Usuario eliminado con éxito` });
+    return res.status(200).json({ message: "Usuario eliminado con éxito" });
   } catch (error) {
     console.error("Error: ", error);
     res.status(500).json({ message: "Error interno del servidor" });
