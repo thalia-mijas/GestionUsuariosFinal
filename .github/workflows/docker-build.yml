@@ -1,15 +1,15 @@
-name: Build and Push Docker Image
+name: Build and Push Docker Image on Tag
 
 on:
   push:
     branches:
       - main
     tags:
-      - 'v*' # Para versionado tipo v1.0.0
+      - '*' # Para tags tipo v1.0.0
 
 env:
+  DOCKER_USER: thaliamijas
   IMAGE_NAME: gestion-usuarios
-  DOCKER_USER: ${{ secrets.DOCKER_USERNAME }}
 
 jobs:
   build:
@@ -29,17 +29,9 @@ jobs:
           password: ${{ secrets.DOCKER_TOKEN }}
 
       - name: Determinar tag
-        id: tag
         run: |
-          if [[ "${GITHUB_REF}" == "refs/tags/"* ]]; then
-            TAG=${GITHUB_REF#refs/tags/}
-          elif [[ "${GITHUB_REF}" == "refs/heads/main" ]]; then
-            TAG=latest
-          else
-            TAG=${GITHUB_SHA::7}
-          fi
+          TAG=${GITHUB_REF#refs/tags/}
           echo "TAG=$TAG" >> $GITHUB_ENV
-          echo "::set-output name=tag::$TAG"
 
       - name: Build y push imagen
         uses: docker/build-push-action@v5
