@@ -1,13 +1,13 @@
 const userSchema = require("./schemas.js");
 const utils = require("./utils.js");
 const jwt = require("jsonwebtoken");
-const dotenv = require("dotenv");
 const User = require("./models/user.js");
 const { Op } = require("sequelize");
 const rateLimit = require("express-rate-limit");
 const xss = require("xss");
+const dotenv = require("dotenv");
 
-dotenv.config(); // Cargar variables de entorno desde .env
+dotenv.config();
 
 const SECRET_KEY = process.env.JWT_SECRET;
 const WINDOW_MINUTES = parseInt(process.env.WINDOW_MINUTES) || 15;
@@ -175,15 +175,15 @@ const verifyToken = (req, res, next) => {
 
 const xssSanitizer = (req, res, next) => {
   const sanitize = (obj) => {
-    if (!obj) return;
+    if (!obj || typeof obj !== "object") return;
     for (const key in obj) {
       if (typeof obj[key] === "string") {
-        obj[key] = xss(obj[key]);
+        obj[key] = xss(obj[key]); // escapa los caracteres peligrosos
       } else if (Array.isArray(obj[key])) {
         obj[key] = obj[key].map((item) =>
           typeof item === "string" ? xss(item) : item
         );
-      } else if (typeof obj[key] === "object" && obj[key] !== null) {
+      } else if (typeof obj[key] === "object") {
         sanitize(obj[key]);
       }
     }

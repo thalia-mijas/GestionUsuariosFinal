@@ -1,13 +1,15 @@
 const { Sequelize } = require("sequelize");
 
-const sequelize = new Sequelize(
-  "usuariosFinal", // Nombre de la base de datos
-  "uem", // Usuario de la base de datos
-  "1234", // Contraseña del usuario
-  {
-    host: "localhost", // Host donde se encuentra la base de datos
-    dialect: "mysql", // Tipo de base de datos
-  }
-);
+let sequelize;
+
+if (process.env.NODE_ENV === "test") {
+  console.log("Conectando a la base de datos en modo test");
+  sequelize = new Sequelize("sqlite::memory:"); // base temporal para tests
+} else {
+  sequelize = new Sequelize("usuariosFinal", "uem", "1234", {
+    host: "localhost",
+    dialect: "mysql",
+  });
+}
 
 module.exports = sequelize;

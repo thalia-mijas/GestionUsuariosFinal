@@ -10,14 +10,11 @@ const {
   validateUser,
 } = require("./middlewares.js");
 const { loginLimiter, xssSanitizer } = require("./middlewares.js");
-const sequelize = require("./models/index.js");
 const csrf = require("csurf");
 const xss = require("xss");
 const dotenv = require("dotenv");
 
 dotenv.config();
-
-const PORT = process.env.PORT || 3000;
 
 const app = express();
 
@@ -68,16 +65,6 @@ app.post("/logout", (req, res) => {
   res.status(200).json({ message: "Sesión cerrada" });
 });
 
-if (process.env.NODE_ENV === "test") {
-  app.post("/test/:id", xssSanitizer, (req, res) => {
-    res.status(200).json({
-      body: req.body,
-      params: req.params,
-      query: req.query,
-    });
-  });
-}
-
 // Middleware para manejar errores de CSRF
 app.use((err, req, res, next) => {
   if (err.code === "EBADCSRFTOKEN") {
@@ -92,14 +79,4 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: "Error interno del servidor" });
 });
 
-sequelize
-  .sync()
-  .then(() => {
-    console.log("Base de datos sincronizada");
-    app.listen(PORT, () => {
-      console.log(`El servidor esta escuchando el puerto ${PORT}`);
-    });
-  })
-  .catch((error) => {
-    console.error("No se pudo sincronizar la base de datos:", error);
-  });
+module.exports = app;

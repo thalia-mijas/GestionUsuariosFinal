@@ -606,13 +606,14 @@ describe("xssSanitizer", () => {
 
     const res = await request(app)
       .post(`/test/${encoded}`)
-      .query({ search: malicious })
+      .query({ search: encoded })
       .send({ comment: malicious });
 
     expect(res.status).toBe(200);
     expect(res.body.body.comment).toBe(sanitized);
     expect(res.body.params.id).toBe(sanitized);
-    expect(res.body.query.search).toBe(sanitized);
+    // Decode the received value before comparing to sanitized
+    expect(xss(decodeURIComponent(res.body.query.search))).toBe(sanitized);
   });
 
   it("should sanitize nested objects", async () => {

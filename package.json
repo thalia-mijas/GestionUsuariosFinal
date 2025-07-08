@@ -1,9 +1,9 @@
 {
-  "name": "otherusers",
+  "name": "gestion-usuarios-final",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
-    "start": "node index.js",
+    "start": "node server.js",
     "test": "node --experimental-vm-modules ./node_modules/.bin/jest"
   },
   "keywords": [],
@@ -22,6 +22,7 @@
     "jsonwebtoken": "^9.0.2",
     "mysql2": "^3.14.1",
     "sequelize": "^6.37.7",
+    "sqlite3": "^5.1.7",
     "xss": "^1.0.15"
   },
   "devDependencies": {
