@@ -9,7 +9,7 @@ on:
 
 env:
   IMAGE_NAME: gestion-usuarios
-  DOCKER_USER: tu_usuario_dockerhub
+  DOCKER_USER: ${{ secrets.DOCKER_USERNAME }}
 
 jobs:
   build:
