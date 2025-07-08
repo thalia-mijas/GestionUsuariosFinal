@@ -1,20 +1,21 @@
-import express from "express";
-import {
+const express = require("express");
+const cookieParser = require("cookie-parser");
+const { verifyToken, generateToken } = require("./middlewares.js");
+const {
   listUsers,
   createUser,
   deleteUser,
   findUser,
   updateUser,
   validateUser,
-  generateToken,
-  verifyToken,
-  loginLimiter,
-  xssSanitizer,
-} from "./middlewares.js";
-import "dotenv/config";
-import sequelize from "./models/index.js";
-import cookieParser from "cookie-parser";
-import csrf from "csurf";
+} = require("./middlewares.js");
+const { loginLimiter, xssSanitizer } = require("./middlewares.js");
+const sequelize = require("./models/index.js");
+const csrf = require("csurf");
+const xss = require("xss");
+const dotenv = require("dotenv");
+
+dotenv.config();
 
 const PORT = process.env.PORT || 3000;
 
@@ -66,6 +67,16 @@ app.post("/logout", (req, res) => {
   });
   res.status(200).json({ message: "Sesión cerrada" });
 });
+
+if (process.env.NODE_ENV === "test") {
+  app.post("/test/:id", xssSanitizer, (req, res) => {
+    res.status(200).json({
+      body: req.body,
+      params: req.params,
+      query: req.query,
+    });
+  });
+}
 
 // Middleware para manejar errores de CSRF
 app.use((err, req, res, next) => {

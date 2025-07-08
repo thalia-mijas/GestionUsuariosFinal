@@ -1,5 +1,5 @@
-import { DataTypes } from "sequelize";
-import sequelize from "./index.js"; // Importa la instancia de Sequelize
+const { DataTypes } = require("sequelize");
+const sequelize = require("./index.js"); // Importa la instancia de Sequelize
 
 const User = sequelize.define("usuariosFinal", {
   name: DataTypes.STRING,
@@ -7,4 +7,4 @@ const User = sequelize.define("usuariosFinal", {
   password: DataTypes.STRING,
 });
 
-export default User;
+module.exports = User;

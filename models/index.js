@@ -1,4 +1,4 @@
-import { Sequelize } from "sequelize";
+const { Sequelize } = require("sequelize");
 
 const sequelize = new Sequelize(
   "usuariosFinal", // Nombre de la base de datos
@@ -10,4 +10,4 @@ const sequelize = new Sequelize(
   }
 );
 
-export default sequelize;
+module.exports = sequelize;

@@ -1,18 +1,19 @@
-import { userSchema } from "./schemas.js";
-import { verifyPassword } from "./utils.js";
-import { hashPassword } from "./utils.js";
-import jwt from "jsonwebtoken";
-import "dotenv/config";
-import User from "./models/user.js";
-import { Op } from "sequelize";
-import rateLimit from "express-rate-limit";
-import xss from "xss";
+const userSchema = require("./schemas.js");
+const utils = require("./utils.js");
+const jwt = require("jsonwebtoken");
+const dotenv = require("dotenv");
+const User = require("./models/user.js");
+const { Op } = require("sequelize");
+const rateLimit = require("express-rate-limit");
+const xss = require("xss");
+
+dotenv.config(); // Cargar variables de entorno desde .env
 
 const SECRET_KEY = process.env.JWT_SECRET;
 const WINDOW_MINUTES = parseInt(process.env.WINDOW_MINUTES) || 15;
 const MAX_LOGIN_ATTEMPTS = parseInt(process.env.MAX_LOGIN_ATTEMPTS) || 3;
 
-export const listUsers = async (req, res, next) => {
+const listUsers = async (req, res, next) => {
   try {
     const users = await User.findAll();
     res.status(200).json({ usuarios: users });
@@ -22,7 +23,7 @@ export const listUsers = async (req, res, next) => {
   }
 };
 
-export const validateUser = async (req, res, next) => {
+const validateUser = async (req, res, next) => {
   const { error } = userSchema.validate(req.body, { abortEarly: false });
   if (error) {
     const messages = error.details.map((detail) => detail.message);
@@ -37,20 +38,20 @@ export const validateUser = async (req, res, next) => {
     },
   });
 
-  // Si existe usuario y (el id o es diferente al del usuario encontrado)
+  // Si existe usuario y el id es diferente al del usuario encontrado
   if (user && user.id !== id) {
     return res.status(409).json({ message: "El usuario ya está registrado" });
   }
   next();
 };
 
-export const createUser = async (req, res, next) => {
+const createUser = async (req, res, next) => {
   try {
     const { name, email, password } = req.body;
     const new_user = {
       name: name,
       email: email,
-      password: await hashPassword(password),
+      password: await utils.hashPassword(password),
     };
     const users = await User.findAll();
     users.push(new_user);
@@ -62,7 +63,7 @@ export const createUser = async (req, res, next) => {
   }
 };
 
-export const updateUser = async (req, res, next) => {
+const updateUser = async (req, res, next) => {
   try {
     const { id } = req.params;
     const { name, email, password } = req.body;
@@ -71,7 +72,7 @@ export const updateUser = async (req, res, next) => {
     const updated_user = {
       name: name,
       email: email,
-      password: await hashPassword(password),
+      password: await utils.hashPassword(password),
     };
 
     await user.update(updated_user);
@@ -86,7 +87,7 @@ export const updateUser = async (req, res, next) => {
   }
 };
 
-export const deleteUser = async (req, res, next) => {
+const deleteUser = async (req, res, next) => {
   try {
     const { id } = req.params;
     const user = await User.findByPk(id);
@@ -101,7 +102,7 @@ export const deleteUser = async (req, res, next) => {
   }
 };
 
-export const findUser = async (req, res, next) => {
+const findUser = async (req, res, next) => {
   try {
     const { id } = req.params;
     const user = await User.findByPk(id);
@@ -113,7 +114,7 @@ export const findUser = async (req, res, next) => {
   }
 };
 
-export const loginLimiter = rateLimit({
+const loginLimiter = rateLimit({
   windowMs: WINDOW_MINUTES * 60 * 1000,
   max: MAX_LOGIN_ATTEMPTS,
   keyGenerator: (req) => req.body.username || req.ip, // cuenta los intentos por username si está disponible, sino por ip
@@ -125,7 +126,7 @@ export const loginLimiter = rateLimit({
   skipSuccessfulRequests: true, //Solo limita intentos fallidos
 });
 
-export const generateToken = async (req, res, next) => {
+const generateToken = async (req, res, next) => {
   try {
     const { username, password } = req.body;
     const user = await User.findOne({
@@ -134,7 +135,7 @@ export const generateToken = async (req, res, next) => {
 
     if (!user) return res.status(404).json({ error: "El usuario no existe" });
 
-    if (await verifyPassword(password, user.password)) {
+    if (await utils.verifyPassword(password, user.password)) {
       const payload = { username };
       const token = jwt.sign(payload, SECRET_KEY, { expiresIn: "5m" });
 
@@ -145,7 +146,7 @@ export const generateToken = async (req, res, next) => {
         sameSite: "Strict",
       });
 
-      res.json({ message: "Login exitoso" });
+      return res.json({ message: "Login exitoso" });
     } else {
       res.status(401).json({ message: "Credenciales incorrectas" });
     }
@@ -155,7 +156,7 @@ export const generateToken = async (req, res, next) => {
   }
 };
 
-export const verifyToken = (req, res, next) => {
+const verifyToken = (req, res, next) => {
   try {
     // Leer el token desde la cookie httpOnly
     const token = req.cookies?.token;
@@ -172,13 +173,17 @@ export const verifyToken = (req, res, next) => {
   }
 };
 
-export const xssSanitizer = (req, res, next) => {
+const xssSanitizer = (req, res, next) => {
   const sanitize = (obj) => {
     if (!obj) return;
     for (const key in obj) {
       if (typeof obj[key] === "string") {
         obj[key] = xss(obj[key]);
-      } else if (typeof obj[key] === "object") {
+      } else if (Array.isArray(obj[key])) {
+        obj[key] = obj[key].map((item) =>
+          typeof item === "string" ? xss(item) : item
+        );
+      } else if (typeof obj[key] === "object" && obj[key] !== null) {
         sanitize(obj[key]);
       }
     }
@@ -189,4 +194,17 @@ export const xssSanitizer = (req, res, next) => {
   sanitize(req.query);
 
   next();
+};
+
+module.exports = {
+  listUsers,
+  validateUser,
+  createUser,
+  updateUser,
+  deleteUser,
+  findUser,
+  loginLimiter,
+  generateToken,
+  verifyToken,
+  xssSanitizer,
 };
