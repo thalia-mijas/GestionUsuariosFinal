@@ -16,6 +16,12 @@ if (process.env.NODE_ENV === "test") {
     {
       host: process.env.DB_HOST, // Dirección del servidor de la base de datos
       dialect: "mysql", // Tipo de base de datos
+      port: process.env.DB_PORT || 3306, // Puerto del servidor de la base de datos
+      dialectOptions: {
+        ssl: {
+          rejectUnauthorized: true, // o false si estás usando un certificado autofirmado
+        },
+      },
     }
   );
 }
