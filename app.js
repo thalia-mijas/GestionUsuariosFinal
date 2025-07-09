@@ -24,13 +24,19 @@ app.use(express.json());
 app.use(xssSanitizer); // Temporarily disabled for debugging
 app.use(cookieParser()); // Necesario para leer cookies de autenticación
 
-app.get("/csrf-token", csrfProtection, (req, res) => {
+app.get("api/csrf-token", csrfProtection, (req, res) => {
   res.json({ csrfToken: req.csrfToken() });
 });
 
-app.get("/", listUsers, (req, res) => {});
+app.get("api/users", listUsers, (req, res) => {});
 
-app.post("/", csrfProtection, validateUser, createUser, (req, res) => {});
+app.post(
+  "api/users",
+  csrfProtection,
+  validateUser,
+  createUser,
+  (req, res) => {}
+);
 
 app.put(
   "/:id",
@@ -41,15 +47,27 @@ app.put(
   (req, res) => {}
 );
 
-app.delete("/:id", verifyToken, csrfProtection, deleteUser, (req, res) => {});
+app.delete(
+  "api/users/:id",
+  verifyToken,
+  csrfProtection,
+  deleteUser,
+  (req, res) => {}
+);
 
-app.get("/:id", findUser, (req, res) => {});
+app.get("api/users/:id", findUser, (req, res) => {});
 
-app.post("/login", loginLimiter, csrfProtection, generateToken, (req, res) => {
-  res.status(200).json({ message: "Login exitoso" });
-});
+app.post(
+  "api/users/login",
+  loginLimiter,
+  csrfProtection,
+  generateToken,
+  (req, res) => {
+    res.status(200).json({ message: "Login exitoso" });
+  }
+);
 
-app.post("/logout", csrfProtection, (req, res) => {
+app.post("api/users/logout", csrfProtection, (req, res) => {
   res.clearCookie("token", {
     httpOnly: true,
     secure: true,
