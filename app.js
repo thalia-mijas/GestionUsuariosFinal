@@ -50,6 +50,10 @@ app.post("/login", loginLimiter, csrfProtection, generateToken, (req, res) => {
 });
 
 app.post("/logout", csrfProtection, (req, res) => {
+  const token = req.cookies.token;
+  if (!token) {
+    return res.status(401).json({ error: "No existe sesión activa" });
+  }
   res.clearCookie("token", {
     httpOnly: true,
     secure: true,
