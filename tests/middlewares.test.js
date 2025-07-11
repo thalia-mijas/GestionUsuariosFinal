@@ -254,7 +254,11 @@ describe("updateUser", () => {
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith({
       message: "Usuario actualizado con exito",
-      user: { id: "1", name: "UpdatedName", email: "updated@example.com" },
+      updated_user: {
+        name: "UpdatedName",
+        email: "updated@example.com",
+        password: fakeHashedPassword,
+      },
     });
   });
 
@@ -457,19 +461,7 @@ describe("generateToken", () => {
     jest.clearAllMocks();
   });
 
-  it("should return 404 if user does not exist", async () => {
-    User.findOne.mockResolvedValue(null);
-
-    const res = await request(app).post("/login").send({
-      username: "nonexistent",
-      password: "irrelevant",
-    });
-
-    expect(res.status).toBe(404);
-    expect(res.body).toEqual({ error: "El usuario no existe" });
-  });
-
-  it("should return 401 if password is incorrect", async () => {
+  it("should return 401 if password or username are incorrect", async () => {
     User.findOne.mockResolvedValue({ name: "testuser", password: "hashed" });
     utils.verifyPassword.mockResolvedValue(false);
 

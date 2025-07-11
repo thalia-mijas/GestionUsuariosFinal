@@ -129,27 +129,32 @@ const loginLimiter = rateLimit({
 const generateToken = async (req, res, next) => {
   try {
     const { username, password } = req.body;
+
+    if (!username || !password) {
+      return res
+        .status(400)
+        .json({ message: "Username y password son requeridos" });
+    }
+
     const user = await User.findOne({
       where: { name: username },
     });
 
-    if (!user) return res.status(404).json({ error: "El usuario no existe" });
-
-    if (await utils.verifyPassword(password, user.password)) {
-      const payload = { username };
-      const token = jwt.sign(payload, SECRET_KEY, { expiresIn: "5m" });
-
-      //Almacenar el token en una cookie httpOnly
-      res.cookie("token", token, {
-        httpOnly: true,
-        secure: true,
-        sameSite: "Strict",
-      });
-
-      return res.json({ message: "Login exitoso" });
-    } else {
-      res.status(401).json({ message: "Credenciales incorrectas" });
+    if (!user || !(await utils.verifyPassword(password, user.password))) {
+      return res.status(401).json({ message: "Credenciales incorrectas" });
     }
+
+    const payload = { id: user.id, name: user.name, email: user.email };
+    const token = jwt.sign(payload, SECRET_KEY, { expiresIn: "5m" });
+
+    //Almacenar el token en una cookie httpOnly
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "Strict",
+    });
+
+    return res.json({ message: "Login exitoso" });
   } catch (error) {
     console.error("Error: ", error);
     res.status(500).json({ message: "Error interno del servidor" });
